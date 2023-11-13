@@ -13,6 +13,11 @@ namespace CodigosDeLinea
 {
     public partial class Form1 : Form
     {
+        string codeBinary = string.Empty;
+        int nrzi_prev_bit = 0;
+        bool cmi_polarity = false;
+        bool ami_polarity = false;
+
         public Form1()
         {
             InitializeComponent();
@@ -21,66 +26,19 @@ namespace CodigosDeLinea
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            textBox1.Text = flowLayoutPanel1.Margin.Right.ToString();
+            //InputCode.Text = flowLayoutPanel1.Margin.Right.ToString();
             initializeCharts();
-            ShowBinaryPulseTrain("001110101010");
+            LimpiarSeries();
+            ShowCharts();
 
-        }
+            //ShowBinaryPulseTrain("001110101010");
 
-        private void ShowBinaryPulseTrain(string binarySequence)
-        {
-            // Configurar el gráfico
-            //ChartNrz.Series.Clear();
-            //ChartNrz.ChartAreas.Clear();
-
-            //ChartArea chartArea = new ChartArea();
-            //ChartNrz.ChartAreas.Add(chartArea);
-
-            //Series binarySeries = new Series("BinaryPulseTrain");
-            //binarySeries.ChartType = SeriesChartType.StepLine;
-
-            //// Convertir la secuencia binaria en una serie de puntos para el gráfico
-            //for (int i = 0; i < binarySequence.Length; i++)
-            //{
-            //    int yValue = (binarySequence[i] == '1') ? 1 : 0;
-            //    binarySeries.Points.AddXY(i, yValue);
-            //    binarySeries.Points.AddXY(i + 1, yValue);
-            //}
-
-            //ChartNrz.Series.Add(binarySeries);
-
-            //// Configurar ejes y título
-            //chartArea.AxisX.Title = "Bits";
-            //chartArea.AxisY.Title = "Nivel";
-            //ChartNrz.Titles.Add("Binary Pulse Train");
-
-            //// Configurar el grid
-            //chartArea.AxisX.MajorGrid.LineColor = System.Drawing.Color.Gray;
-            //chartArea.AxisX.MajorGrid.LineDashStyle = ChartDashStyle.Dot;
-            //chartArea.AxisY.MajorGrid.LineColor = System.Drawing.Color.Gray;
-            //chartArea.AxisY.MajorGrid.LineDashStyle = ChartDashStyle.Dot;
-
-            //// Ajustar el rango del eje Y
-            //chartArea.AxisY.Minimum = -2;
-            //chartArea.AxisY.Maximum = 2;
-            //chartArea.AxisY.Interval = 1; // Establecer el intervalo del eje Y a 1
-
-            //// Cambiar el color y el grosor de la línea
-            //binarySeries.Color = System.Drawing.Color.Red;
-            //binarySeries.BorderWidth = 2;
-
-            //Size screenSize = SystemInformation.PrimaryMonitorSize;
-            //Size windowSize = this.Size;
-
-
-            // Ajustar el tamaño del gráfico
-            //ChartNrz.Size = new System.Drawing.Size(flowLayoutPanel1.Width-(flowLayoutPanel1.Margin.Right*2), 400);
         }
 
         private void initializeCharts()
         {
             ChartNrz.Size = new System.Drawing.Size(flowLayoutPanel1.Width - (flowLayoutPanel1.Margin.Right * 2), 400);
-            ChartNrz.Size = new System.Drawing.Size(flowLayoutPanel1.Width - (flowLayoutPanel1.Margin.Right * 2), 400);
+            ChartNrzi.Size = new System.Drawing.Size(flowLayoutPanel1.Width - (flowLayoutPanel1.Margin.Right * 2), 400);
             ChartCmi.Size = new System.Drawing.Size(flowLayoutPanel1.Width - (flowLayoutPanel1.Margin.Right * 2), 400);
             ChartAmi.Size = new System.Drawing.Size(flowLayoutPanel1.Width - (flowLayoutPanel1.Margin.Right * 2), 400);
             ChartHdb3.Size = new System.Drawing.Size(flowLayoutPanel1.Width - (flowLayoutPanel1.Margin.Right * 2), 400);
@@ -88,6 +46,152 @@ namespace CodigosDeLinea
             ChartManchesterDiferencial.Size = new System.Drawing.Size(flowLayoutPanel1.Width - (flowLayoutPanel1.Margin.Right * 2), 400);
 
         }
+
+        private void LimpiarSeries()
+        {
+            ChartNrz.Series[0].Points.Clear();
+            ChartNrzi.Series[0].Points.Clear();
+            ChartCmi.Series[0].Points.Clear();
+            ChartAmi.Series[0].Points.Clear();
+            ChartHdb3.Series[0].Points.Clear();
+            ChartManchester.Series[0].Points.Clear();
+            ChartManchesterDiferencial.Series[0].Points.Clear();
+            nrzi_prev_bit = 0;
+            cmi_polarity = false;
+            ami_polarity = false;
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            codeBinary = string.Empty;
+            InputCode.Text = string.Empty;
+            LimpiarSeries();
+        }
+
+
+        private void InputCode_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar != '0' && e.KeyChar != '1' && e.KeyChar != (char)Keys.Back && e.KeyChar != (char)Keys.Delete)
+            {
+                e.Handled = true;                
+            }
+        }
+
+        private void InputCode_TextChanged(object sender, EventArgs e)
+        {
+            codeBinary = InputCode.Text;
+            Console.WriteLine(codeBinary);
+            LimpiarSeries();
+            ShowCode();
+        }
+
+        private void CheckNrz_CheckedChanged(object sender, EventArgs e)
+        {
+            ShowCharts();
+        }
+
+        private void ShowCharts()
+        {
+            ChartNrz.Visible = CheckNrz.Checked;
+            ChartNrzi.Visible = CheckNrzi.Checked;
+            ChartCmi.Visible = CheckCmi.Checked;
+            ChartAmi.Visible = CheckAmi.Checked;
+            ChartHdb3.Visible = CheckHdb3.Checked;
+            ChartManchester.Visible = CheckManchester.Checked;
+            ChartManchesterDiferencial.Visible = CheckManchesterDiferencial.Checked;
+        }
+
+        private void ShowCode()
+        {
+            for (int i = 0; i < codeBinary.Length; i++)
+            {
+                int yValue = (codeBinary[i] == '1') ? 1 : 0;
+                AddNrz(yValue, i);
+                AddNrzi(yValue, i);
+                AddCmi(yValue, i);
+                AddAmi(yValue, i);
+                //binarySeries.Points.AddXY(i, yValue);
+                //binarySeries.Points.AddXY(i + 1, yValue);
+            }
+
+        }
+
+        private void AddNrz(int data, int point)
+        {
+            ChartNrz.Series[0].Points.AddXY(point, data);
+            ChartNrz.Series[0].Points.AddXY(point+1, data);
+        }
+
+        private void AddNrzi(int data, int point)
+        {
+            if (data == 1)
+            {
+                if (nrzi_prev_bit == 1)
+                {
+                    nrzi_prev_bit = 0;
+                }
+                else
+                {
+                    nrzi_prev_bit = 1;
+                }
+            }
+            ChartNrzi.Series[0].Points.AddXY(point, nrzi_prev_bit);
+            ChartNrzi.Series[0].Points.AddXY(point + 1, nrzi_prev_bit);
+
+        }
+
+        private void AddCmi(int data, int point)
+        {
+            if (data == 1)
+            {
+                if (cmi_polarity)
+                {
+                    ChartCmi.Series[0].Points.AddXY(point, -1);
+                    ChartCmi.Series[0].Points.AddXY(point + 1, -1);
+                }
+                else
+                {
+                    ChartCmi.Series[0].Points.AddXY(point, 1);
+                    ChartCmi.Series[0].Points.AddXY(point + 1, 1);
+                }
+                cmi_polarity = !cmi_polarity;
+            }
+            else
+            {
+                ChartCmi.Series[0].Points.AddXY(point, -1);
+                ChartCmi.Series[0].Points.AddXY(point + 0.5, -1);
+                ChartCmi.Series[0].Points.AddXY(point + 0.5, 1);
+                ChartCmi.Series[0].Points.AddXY(point + 1, 1);
+            }
+            //DataPoint newPoint = ChartCmi.Series[0].Points[ChartNrz.Series[0].Points.Count - 2];
+            //newPoint.Label = data.ToString();
+            //newPoint.SetCustomProperty("LabelStyle", "Top");
+
+        }
+
+        private void AddAmi(int data, int point)
+        {
+            if (data == 1)
+            {
+                if (ami_polarity)
+                {
+                    ChartAmi.Series[0].Points.AddXY(point, -1);
+                    ChartAmi.Series[0].Points.AddXY(point + 1, -1);
+                }
+                else
+                {
+                    ChartAmi.Series[0].Points.AddXY(point, 1);
+                    ChartAmi.Series[0].Points.AddXY(point + 1, 1);
+                }
+                ami_polarity = !ami_polarity;
+            }
+            else
+            {
+                ChartAmi.Series[0].Points.AddXY(point, 0);
+                ChartAmi.Series[0].Points.AddXY(point + 1, 0);
+            }            
+        }
+
 
     }
 }
