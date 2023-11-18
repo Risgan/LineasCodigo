@@ -14,9 +14,19 @@ namespace CodigosDeLinea
     public partial class Form1 : Form
     {
         string codeBinary = string.Empty;
+        
         int nrzi_prev_bit = 0;
+        
         bool cmi_polarity = false;
+        
         bool ami_polarity = false;
+
+        bool hdb3_polarity = false;
+        bool hdb3_violation_polarity = false;
+        int hdb3_zeros_count = 0;
+        int hdb3_one_count = 0;
+
+        bool manchesterDif = false;
 
         public Form1()
         {
@@ -54,11 +64,17 @@ namespace CodigosDeLinea
             ChartCmi.Series[0].Points.Clear();
             ChartAmi.Series[0].Points.Clear();
             ChartHdb3.Series[0].Points.Clear();
+            ChartHdb3.Series[1].Points.Clear();
+            ChartHdb3.Series[2].Points.Clear();
             ChartManchester.Series[0].Points.Clear();
             ChartManchesterDiferencial.Series[0].Points.Clear();
             nrzi_prev_bit = 0;
             cmi_polarity = false;
             ami_polarity = false;
+            hdb3_polarity = false;
+            hdb3_violation_polarity = false;
+            hdb3_zeros_count = 0;
+            hdb3_one_count = 0;
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -110,6 +126,9 @@ namespace CodigosDeLinea
                 AddNrzi(yValue, i);
                 AddCmi(yValue, i);
                 AddAmi(yValue, i);
+                AddHdb3(yValue, i);
+                AddManchester(yValue, i);
+                AddManchesterDif(yValue, i);
                 //binarySeries.Points.AddXY(i, yValue);
                 //binarySeries.Points.AddXY(i + 1, yValue);
             }
@@ -192,6 +211,108 @@ namespace CodigosDeLinea
             }            
         }
 
+        private void AddHdb3(int data, int point)
+        {
+            double barWidth = 1;
+            if (data == 1)
+            {
+                hdb3_one_count++;
+                if (hdb3_polarity)
+                {
+                    ChartHdb3.Series[0].Points.AddXY(point, -1);
+                    ChartHdb3.Series[0].Points.AddXY(point + 1, -1);
+                }
+                else
+                {
+                    ChartHdb3.Series[0].Points.AddXY(point, 1);
+                    ChartHdb3.Series[0].Points.AddXY(point + 1, 1);
+                }
+                hdb3_polarity = !hdb3_polarity;
+
+                ChartHdb3.Series[1].Points.AddXY(point + 0.5 * barWidth, 0);
+                ChartHdb3.Series[2].Points.AddXY(point + 0.5 * barWidth, 0);
+
+            }
+            else
+            {
+                hdb3_zeros_count++;
+                if (hdb3_zeros_count > 3)
+                {
+                    if (hdb3_violation_polarity)
+                    {
+                        ChartHdb3.Series[0].Points.AddXY(point, 1);
+                        ChartHdb3.Series[0].Points.AddXY(point + 1, 1);
+                        
+                        ChartHdb3.Series[2].Points.AddXY(point + 0.5 * barWidth, 0.8);
+                    }
+                    else
+                    {
+                        ChartHdb3.Series[0].Points.AddXY(point, -1);
+                        ChartHdb3.Series[0].Points.AddXY(point + 1, -1);
+
+                        ChartHdb3.Series[2].Points.AddXY(point + 0.5 * barWidth, -0.9);
+                        ChartHdb3.Series[1].Points.AddXY(point - 3 + 0.5 * barWidth, -0.9);
+
+                        ChartHdb3.Series[0].Points.AddXY(point -3, -1);
+                        ChartHdb3.Series[0].Points.AddXY(point -3 + 1, -1);
+
+                    }
+                    hdb3_violation_polarity = !hdb3_violation_polarity;
+                    hdb3_zeros_count = 0;
+                }
+                else
+                {
+                    ChartHdb3.Series[0].Points.AddXY(point, 0);
+                    ChartHdb3.Series[0].Points.AddXY(point + 1, 0);
+                    ChartHdb3.Series[1].Points.AddXY(point + 0.5 * barWidth, 0);
+                    ChartHdb3.Series[2].Points.AddXY(point + 0.5 * barWidth, 0);
+
+                }
+
+
+            }
+        }
+
+        private void AddManchester(int data, int point)
+        {
+            if (data == 1)
+            {
+                ChartManchester.Series[0].Points.AddXY(point, 1);
+                ChartManchester.Series[0].Points.AddXY(point + 0.5, 1);
+                ChartManchester.Series[0].Points.AddXY(point + 0.5, 0);
+                ChartManchester.Series[0].Points.AddXY(point + 1, 0);
+            }
+            else
+            {
+                ChartManchester.Series[0].Points.AddXY(point, 0);
+                ChartManchester.Series[0].Points.AddXY(point + 0.5, 0);
+                ChartManchester.Series[0].Points.AddXY(point + 0.5, 1);
+                ChartManchester.Series[0].Points.AddXY(point + 1, 1);
+            }
+        }
+
+        private void AddManchesterDif(int data, int point)
+        {
+            if (data == 1)
+            {
+                manchesterDif = !manchesterDif;
+            }
+
+            if (manchesterDif)
+            {
+                ChartManchesterDiferencial.Series[0].Points.AddXY(point, 1);
+                ChartManchesterDiferencial.Series[0].Points.AddXY(point + 0.5, 1);
+                ChartManchesterDiferencial.Series[0].Points.AddXY(point + 0.5, 0);
+                ChartManchesterDiferencial.Series[0].Points.AddXY(point + 1, 0);
+            }
+            else
+            {
+                ChartManchesterDiferencial.Series[0].Points.AddXY(point, 0);
+                ChartManchesterDiferencial.Series[0].Points.AddXY(point + 0.5, 0);
+                ChartManchesterDiferencial.Series[0].Points.AddXY(point + 0.5, 1);
+                ChartManchesterDiferencial.Series[0].Points.AddXY(point + 1, 1);
+            }
+        }
 
     }
 }
